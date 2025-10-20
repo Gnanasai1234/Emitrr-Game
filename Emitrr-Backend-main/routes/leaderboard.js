@@ -73,35 +73,4 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get player stats
-router.get('/player/:username', async (req, res) => {
-  try {
-    const { username } = req.params;
-    const player = await Player.findOne({ username });
-    
-    if (!player) {
-      return res.status(404).json({ success: false, error: 'Player not found' });
-    }
-    
-    const totalGames = player.wins + player.losses + player.draws;
-    const winPercentage = totalGames > 0 ? 
-      Math.round((player.wins / totalGames) * 100 * 100) / 100 : 0;
-    
-    res.json({
-      success: true,
-      player: {
-        username: player.username,
-        wins: player.wins,
-        losses: player.losses,
-        draws: player.draws,
-        totalGames,
-        winPercentage
-      }
-    });
-  } catch (error) {
-    console.error('Error getting player stats:', error);
-    res.status(500).json({ success: false, error: 'Failed to get player stats' });
-  }
-});
-
 module.exports = router;

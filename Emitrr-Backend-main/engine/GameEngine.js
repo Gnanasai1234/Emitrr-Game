@@ -20,7 +20,6 @@ class GameEngine {
 
     const newBoard = board.map(row => [...row]);
     
-    // Find the lowest available row in the column
     for (let row = this.ROWS - 1; row >= 0; row--) {
       if (newBoard[row][col] === null) {
         newBoard[row][col] = player;
@@ -33,16 +32,15 @@ class GameEngine {
 
   checkWinner(board, row, col, player) {
     const directions = [
-      [0, 1],   // horizontal
-      [1, 0],   // vertical
-      [1, 1],   // diagonal \
-      [1, -1]   // diagonal /
+      [0, 1],   
+      [1, 0],  
+      [1, 1],   
+      [1, -1]   
     ];
 
     for (const [dr, dc] of directions) {
-      let count = 1; // Count the current piece
+      let count = 1;
 
-      // Check in positive direction
       let r = row + dr;
       let c = col + dc;
       while (r >= 0 && r < this.ROWS && c >= 0 && c < this.COLS && board[r][c] === player) {
@@ -51,7 +49,6 @@ class GameEngine {
         c += dc;
       }
 
-      // Check in negative direction
       r = row - dr;
       c = col - dc;
       while (r >= 0 && r < this.ROWS && c >= 0 && c < this.COLS && board[r][c] === player) {
@@ -76,25 +73,20 @@ class GameEngine {
   evaluateBoard(board, player) {
     let score = 0;
     
-    // Check all possible 4-piece sequences
     for (let row = 0; row < this.ROWS; row++) {
       for (let col = 0; col < this.COLS; col++) {
-        // Horizontal
         if (col <= this.COLS - this.WIN_LENGTH) {
           score += this.evaluateSequence(board, row, col, 0, 1, player);
         }
         
-        // Vertical
         if (row <= this.ROWS - this.WIN_LENGTH) {
           score += this.evaluateSequence(board, row, col, 1, 0, player);
         }
         
-        // Diagonal \
         if (row <= this.ROWS - this.WIN_LENGTH && col <= this.COLS - this.WIN_LENGTH) {
           score += this.evaluateSequence(board, row, col, 1, 1, player);
         }
         
-        // Diagonal /
         if (row <= this.ROWS - this.WIN_LENGTH && col >= this.WIN_LENGTH - 1) {
           score += this.evaluateSequence(board, row, col, 1, -1, player);
         }
@@ -123,16 +115,14 @@ class GameEngine {
       }
     }
     
-    // If opponent has pieces in this sequence, it's not useful
     if (opponentCount > 0) return 0;
     
-    // Score based on how many of our pieces are in the sequence
     switch (playerCount) {
-      case 4: return 100000; // Win
-      case 3: return 1000;   // Very good
-      case 2: return 100;    // Good
-      case 1: return 10;     // Okay
-      default: return 0;     // Empty sequence
+      case 4: return 100000; 
+      case 3: return 1000;   
+      case 2: return 100;    
+      case 1: return 10;     
+      default: return 0;     
     }
   }
 

@@ -1,4 +1,4 @@
-Frontend (React):
+rontend (React)
 
 This is the React client for the Connect Four game, with real-time updates powered by Socket.IO.
 
@@ -6,9 +6,9 @@ Prerequisites
 
 Make sure you have the following installed:
 
-Node.js (v16 or higher)
+Node.js v16 or higher
 
-npm (v8 or higher)
+npm v8 or higher
 
 Environment Setup (Optional)
 
@@ -32,8 +32,7 @@ Start the development server:
 npm start
 
 
-The frontend will run at http://localhost:3000
-.
+The frontend will run at http://localhost:3000.
 
 Features
 
@@ -43,7 +42,7 @@ Real-time board updates with turn indication
 
 Bot fallback if no other players are available (server-configured delay)
 
-Leaderboard and player stats views
+Leaderboard view
 
 Reconnect to an active game after refresh or disconnect
 
@@ -55,3 +54,4 @@ npm run build
 
 
 Serve the contents of the build/ folder using your preferred static host or behind a reverse proxy.
+

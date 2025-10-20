@@ -1,4 +1,4 @@
-Backend:
+Backend
 
 A real-time Connect Four server built with Express, Socket.IO, and MongoDB. Supports matchmaking, bot opponents, reconnections, and leaderboard tracking.
 
@@ -46,10 +46,9 @@ API Endpoints
 
 GET /api/leaderboard – Returns top players with wins, losses, draws, and win percentage.
 
-GET /api/leaderboard/player/:username – Returns stats for a specific player.
+GET /api/leaderboard/player/:username – Returns stats for a specific player (used internally for gameplay).
 
 Socket.IO Events
-
 From Client to Server:
 
 joinGame – Join a new game or enter matchmaking. Send { username }.

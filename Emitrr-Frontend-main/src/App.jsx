@@ -3,7 +3,6 @@ import io from 'socket.io-client';
 import config from './config';
 import GameBoard from './Components/GameBoard';
 import Leaderboard from './Components/Leaderboard';
-import PlayerStats from './Components/PlayerStats';
 import './styles/App.css';
 
 function App() {
@@ -13,20 +12,15 @@ function App() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [leaderboardPagination, setLeaderboardPagination] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [playerStats, setPlayerStats] = useState(null);
-  const [currentView, setCurrentView] = useState('login'); // login, game, leaderboard, stats
+  const [currentView, setCurrentView] = useState('login'); // login, game, leaderboard
   const [error, setError] = useState('');
   const usernameRef = useRef('');
 
   useEffect(() => {
-    // Initialize socket connection
     const newSocket = io(config.SOCKET_URL);
     setSocket(newSocket);
 
-    // Socket event listeners
     newSocket.on('gameStarted', (data) => {
-      console.log('gameStarted event received:', data);
-      console.log('Current username:', usernameRef.current);
       setGameState({
         gameId: data.gameId,
         opponent: data.opponent,
@@ -41,37 +35,28 @@ function App() {
     });
 
     newSocket.on('moveMade', (data) => {
-      console.log('moveMade event received:', data);
-      setGameState(prev => {
-        const newState = {
-          ...prev,
-          board: data.board,
-          currentPlayer: data.currentPlayer,
-          gameOver: data.gameOver,
-          winner: data.winner,
-          isDraw: data.isDraw
-        };
-        console.log('Updated game state:', newState);
-        return newState;
-      });
+      setGameState(prev => ({
+        ...prev,
+        board: data.board,
+        currentPlayer: data.currentPlayer,
+        gameOver: data.gameOver,
+        winner: data.winner,
+        isDraw: data.isDraw
+      }));
     });
 
     newSocket.on('playerDisconnected', (data) => {
       setGameState(prev => ({
         ...prev,
         gameOver: true,
-        winner: data.winner, // numeric 1 or 2
+        winner: data.winner,
         isDraw: false,
-        opponent: prev?.opponent // Keep the existing opponent name
+        opponent: prev?.opponent
       }));
     });
 
     newSocket.on('gameReconnected', (data) => {
-      console.log('gameReconnected event received:', data);
-      console.log('Current username:', usernameRef.current);
       const calculatedOpponent = data.player1 === usernameRef.current ? data.player2 : data.player1;
-      console.log('Calculated opponent:', calculatedOpponent);
-      
       setGameState({
         gameId: data.gameId,
         opponent: calculatedOpponent,
@@ -89,7 +74,6 @@ function App() {
       setError(data.message);
     });
 
-    // Attempt automatic reconnect to game whenever socket connects and username is known
     newSocket.on('connect', () => {
       if (usernameRef.current) {
         newSocket.emit('reconnect', { username: usernameRef.current });
@@ -99,104 +83,65 @@ function App() {
     return () => {
       newSocket.close();
     };
-  }, []); // Remove username dependency
+  }, []);
 
-  // Keep usernameRef in sync with username state
   useEffect(() => {
     usernameRef.current = username;
   }, [username]);
 
   const handleLogin = (e) => {
     e.preventDefault();
-    if (username.trim()) {
-      // Try reconnect first; if no active game is found, fall back to joining
-      const cleanUsername = username.trim();
-      let fallbackTimer;
-      const tryJoin = () => {
-        socket.emit('joinGame', { username: cleanUsername });
-        setError('');
-        socket.off('gameReconnected');
-      };
-
-      // Temporarily listen for a quick reconnect success to cancel fallback
-      const onReconnected = () => {
-        clearTimeout(fallbackTimer);
-        socket.off('gameReconnected', onReconnected);
-      };
-
-      socket.on('gameReconnected', onReconnected);
-      socket.emit('reconnect', { username: cleanUsername });
-
-      // If no reconnection response soon, proceed to join a fresh game
-      fallbackTimer = setTimeout(tryJoin, 800);
-    } else {
+    if (!username.trim()) {
       setError('Please enter a username');
+      return;
     }
+    const cleanUsername = username.trim();
+    let fallbackTimer;
+    const tryJoin = () => {
+      socket.emit('joinGame', { username: cleanUsername });
+      setError('');
+      socket.off('gameReconnected');
+    };
+
+    const onReconnected = () => {
+      clearTimeout(fallbackTimer);
+      socket.off('gameReconnected', onReconnected);
+    };
+
+    socket.on('gameReconnected', onReconnected);
+    socket.emit('reconnect', { username: cleanUsername });
+    fallbackTimer = setTimeout(tryJoin, 800);
   };
 
   const handleMakeMove = (column) => {
-    console.log('handleMakeMove called with column:', column);
-    console.log('gameState:', gameState);
-    console.log('socket:', socket);
-    
     if (gameState && !gameState.gameOver && socket) {
-      console.log('Emitting makeMove event');
       socket.emit('makeMove', {
         gameId: gameState.gameId,
-        column: column
+        column
       });
-    } else {
-      console.log('Cannot make move - conditions not met');
     }
   };
 
   const loadLeaderboard = async (page = 1) => {
     try {
-      console.log('Loading leaderboard for page:', page);
       const response = await fetch(`${config.API_BASE_URL}/api/leaderboard?page=${page}&limit=10`);
       const data = await response.json();
-      console.log('Leaderboard API response:', data);
       if (data.success) {
         setLeaderboard(data.leaderboard);
         setLeaderboardPagination(data.pagination);
         setCurrentPage(page);
         setCurrentView('leaderboard');
-        console.log('Leaderboard state updated:', {
-          leaderboard: data.leaderboard,
-          pagination: data.pagination,
-          currentPage: page
-        });
       } else {
-        console.error('Leaderboard API returned error:', data.error);
+        console.error(data.error);
       }
-    } catch (error) {
-      console.error('Error loading leaderboard:', error);
+    } catch (err) {
+      console.error('Error loading leaderboard:', err);
     }
   };
 
   const handlePageChange = (newPage) => {
-    console.log('handlePageChange called with:', newPage);
-    console.log('Current pagination:', leaderboardPagination);
     if (leaderboardPagination && newPage >= 1 && newPage <= leaderboardPagination.totalPages) {
-      console.log('Loading leaderboard for page:', newPage);
       loadLeaderboard(newPage);
-    } else {
-      console.log('Page change rejected - invalid page or no pagination data');
-    }
-  };
-
-  const loadPlayerStats = async () => {
-    if (!username) return;
-    
-    try {
-      const response = await fetch(`${config.API_BASE_URL}/api/leaderboard/player/${username}`);
-      const data = await response.json();
-      if (data.success) {
-        setPlayerStats(data.player);
-        setCurrentView('stats');
-      }
-    } catch (error) {
-      console.error('Error loading player stats:', error);
     }
   };
 
@@ -224,7 +169,7 @@ function App() {
             </form>
             {error && <div className="error">{error}</div>}
             <div className="menu-buttons">
-              <button onClick={loadLeaderboard}>View Leaderboard</button>
+              <button onClick={() => loadLeaderboard()}>View Leaderboard</button>
             </div>
           </div>
         );
@@ -250,14 +195,6 @@ function App() {
               currentPage={currentPage}
               onPageChange={handlePageChange}
             />
-            <button onClick={() => setCurrentView('login')}>Back to Menu</button>
-          </div>
-        );
-
-      case 'stats':
-        return (
-          <div className="stats-container">
-            <PlayerStats stats={playerStats} username={username} />
             <button onClick={() => setCurrentView('login')}>Back to Menu</button>
           </div>
         );

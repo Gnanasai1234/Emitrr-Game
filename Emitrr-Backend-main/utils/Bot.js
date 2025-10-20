@@ -14,7 +14,6 @@ class Bot {
       return null;
     }
 
-    // Check for immediate win
     for (const col of availableMoves) {
       const move = this.gameEngine.makeMove(board, col, player);
       if (move.success) {
@@ -25,7 +24,6 @@ class Bot {
       }
     }
 
-    // Check for immediate loss (block opponent)
     const opponent = player === 1 ? 2 : 1;
     for (const col of availableMoves) {
       const move = this.gameEngine.makeMove(board, col, opponent);
@@ -37,7 +35,6 @@ class Bot {
       }
     }
 
-    // Use minimax for strategic play
     return this.minimax(board, player, 0, -Infinity, Infinity).move;
   }
 
@@ -45,7 +42,6 @@ class Bot {
     const isMaximizing = player === 2; // Bot is player 2
     const opponent = player === 1 ? 2 : 1;
 
-    // Base cases
     if (depth >= this.maxDepth) {
       return {
         score: this.gameEngine.evaluateBoard(board, 2) - this.gameEngine.evaluateBoard(board, 1),
@@ -75,11 +71,11 @@ class Bot {
       let score;
       if (status.gameOver) {
         if (status.winner === 2) {
-          score = 100000 - depth; // Prefer faster wins
+          score = 100000 - depth; 
         } else if (status.winner === 1) {
-          score = -100000 + depth; // Prefer slower losses
+          score = -100000 + depth; 
         } else {
-          score = 0; // Draw
+          score = 0;
         }
       } else {
         const result = this.minimax(move.board, opponent, depth + 1, alpha, beta);
@@ -92,27 +88,25 @@ class Bot {
           bestMove = col;
         }
         alpha = Math.max(alpha, score);
-        if (beta <= alpha) break; // Alpha-beta pruning
+        if (beta <= alpha) break; 
       } else {
         if (score < bestScore) {
           bestScore = score;
           bestMove = col;
         }
         beta = Math.min(beta, score);
-        if (beta <= alpha) break; // Alpha-beta pruning
+        if (beta <= alpha) break; 
       }
     }
 
     return { score: bestScore, move: bestMove };
   }
 
-  // Alternative strategy for easier difficulty
   getEasyMove(board, player) {
     const availableMoves = this.gameEngine.getAvailableMoves(board);
     
     if (availableMoves.length === 0) return null;
 
-    // Check for immediate win
     for (const col of availableMoves) {
       const move = this.gameEngine.makeMove(board, col, player);
       if (move.success) {
@@ -123,7 +117,6 @@ class Bot {
       }
     }
 
-    // Check for immediate loss (block opponent)
     const opponent = player === 1 ? 2 : 1;
     for (const col of availableMoves) {
       const move = this.gameEngine.makeMove(board, col, opponent);
@@ -135,7 +128,6 @@ class Bot {
       }
     }
 
-    // Prefer center columns
     const centerColumns = [3, 2, 4, 1, 5, 0, 6];
     for (const col of centerColumns) {
       if (availableMoves.includes(col)) {
@@ -143,7 +135,6 @@ class Bot {
       }
     }
 
-    // Fallback to random
     return availableMoves[Math.floor(Math.random() * availableMoves.length)];
   }
 }
